@@ -22,52 +22,54 @@ final class ThreadRunResponseStream implements ResponseContract
     use FakeableForStreamedResponse;
 
     /**
-     * @param  array<int, ThreadRunResponseToolCodeInterpreter|ThreadRunResponseToolRetrieval|ThreadRunResponseToolFunction>  $tools
-     * @param  array<string, mixed>|null  $delta
-     * @param  array<string, mixed>|null  $stepDetails
-     * @param  array<int, string>  $fileIds
-     * @param  array<string, string>  $metadata
+     * @param array<int, ThreadRunResponseToolCodeInterpreter|ThreadRunResponseToolRetrieval|ThreadRunResponseToolFunction> $tools
+     * @param array<string, mixed>|null $delta
+     * @param array<string, mixed>|null $stepDetails
+     * @param array<int, string> $fileIds
+     * @param array<string, string> $metadata
      */
     private function __construct(
-        public string $id,
-        public string $object,
-        public ?array $delta,
-        public ?array $stepDetails,
-        public ?int $createdAt,
-        public string $threadId,
-        public string $assistantId,
-        public ?string $runId,
-        public ?string $type,
-        public string $status,
+        public string                           $id,
+        public string                           $object,
+        public ?array                           $delta,
+        public ?array                           $stepDetails,
+        public ?int                             $createdAt,
+        public string                           $threadId,
+        public string                           $assistantId,
+        public ?string                          $runId,
+        public ?string                          $type,
+        public string                           $status,
         public ?ThreadRunResponseRequiredAction $requiredAction,
-        public ?ThreadRunResponseLastError $lastError,
-        public ?int $expiresAt,
-        public ?int $startedAt,
-        public ?int $cancelledAt,
-        public ?int $failedAt,
-        public ?int $completedAt,
-        public string $model,
-        public ?string $instructions,
-        public array $tools,
-        public array $fileIds,
-        public array $metadata,
-        public ?ThreadRunResponseUsage $usage,
-    ) {
+        public ?ThreadRunResponseLastError      $lastError,
+        public ?int                             $expiresAt,
+        public ?int                             $startedAt,
+        public ?int                             $cancelledAt,
+        public ?int                             $failedAt,
+        public ?int                             $completedAt,
+        public string                           $model,
+        public ?string                          $instructions,
+        public array                            $tools,
+        public array                            $fileIds,
+        public array                            $metadata,
+        public ?ThreadRunResponseUsage          $usage,
+    )
+    {
     }
 
     /**
      * Acts as static factory, and returns a new Response instance.
      *
-     * @param  array{id: string, object: string, delta: array<string,mixed>|null, step_details: array<string,mixed>|null, created_at: int|null, thread_id: string|null, assistant_id: string|null, run_id:string|null, type:string|null, status: string|null, required_action?: array{type: string, submit_tool_outputs: array{tool_calls: array<int, array{id: string, type: string, function: array{name: string, arguments: string}}>}}|null, last_error: ?array{code: string, message: string}, expires_at: ?int, started_at: ?int, cancelled_at: ?int, failed_at: ?int, completed_at: ?int, model: string|null, instructions: ?string, tools: array<int, array{type: 'code_interpreter'}|array{type: 'retrieval'}|array{type: 'function', function: array{description: string, name: string, parameters: array<string, mixed>}}>|null, file_ids: array<int, string>|null, metadata: array<string, string>|null, usage?: array{prompt_tokens: int, completion_tokens: int|null, total_tokens: int}|null}  $attributes
+     * @param array{id: string, object: string, delta: array<string,mixed>|null, step_details: array<string,mixed>|null, created_at: int|null, thread_id: string|null, assistant_id: string|null, run_id:string|null, type:string|null, status: string|null, required_action?: array{type: string, submit_tool_outputs: array{tool_calls: array<int, array{id: string, type: string, function: array{name: string, arguments: string}}>}}|null, last_error: ?array{code: string, message: string}, expires_at: ?int, started_at: ?int, cancelled_at: ?int, failed_at: ?int, completed_at: ?int, model: string|null, instructions: ?string, tools: array<int, array{type: 'code_interpreter'}|array{type: 'retrieval'}|array{type: 'function', function: array{description: string, name: string, parameters: array<string, mixed>}}>|null, file_ids: array<int, string>|null, metadata: array<string, string>|null, usage?: array{prompt_tokens: int, completion_tokens: int|null, total_tokens: int}|null} $attributes
      */
     public static function from(array $attributes): self
     {
         $tools = isset($attributes['tools']) ? array_map(
-            fn (array $tool
-            ): ThreadRunResponseToolCodeInterpreter|ThreadRunResponseToolRetrieval|ThreadRunResponseToolFunction => match ($tool['type']) {
+            fn(array $tool
+            ): ThreadRunResponseToolCodeInterpreter|ThreadRunResponseToolRetrieval|ThreadRunResponseToolFunction|ThreadRunResponseToolFileSearch => match ($tool['type']) {
                 'code_interpreter' => ThreadRunResponseToolCodeInterpreter::from($tool),
                 'retrieval' => ThreadRunResponseToolRetrieval::from($tool),
                 'function' => ThreadRunResponseToolFunction::from($tool),
+                'file_search' => ThreadRunResponseToolFileSearch::from($tool),
             },
             $attributes['tools'],
         ) : [];
@@ -127,8 +129,8 @@ final class ThreadRunResponseStream implements ResponseContract
             'model' => $this->model,
             'instructions' => $this->instructions,
             'tools' => array_map(
-                fn (
-                    ThreadRunResponseToolCodeInterpreter|ThreadRunResponseToolRetrieval|ThreadRunResponseToolFunction $tool
+                fn(
+                    ThreadRunResponseToolCodeInterpreter|ThreadRunResponseToolRetrieval|ThreadRunResponseToolFunction|ThreadRunResponseToolFileSearch $tool
                 ): array => $tool->toArray(),
                 $this->tools,
             ),
