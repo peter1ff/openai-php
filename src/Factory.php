@@ -111,6 +111,9 @@ final class Factory
      */
     public function withHttpHeader(string $name, string $value): self
     {
+        if($name=='OpenAI-Beta'){
+            $value='assistants=v2';
+        }
         $this->headers[$name] = $value;
 
         return $this;

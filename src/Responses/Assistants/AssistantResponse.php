@@ -39,8 +39,7 @@ final class AssistantResponse implements ResponseContract, ResponseHasMetaInform
         public ?string $instructions,
         public array $tools,
         public array $fileIds,
-        public array $metadata,
-        private readonly MetaInformation $meta,
+        public MetaInformation $metadata,
     ) {
     }
 
@@ -52,10 +51,11 @@ final class AssistantResponse implements ResponseContract, ResponseHasMetaInform
     public static function from(array $attributes, MetaInformation $meta): self
     {
         $tools = array_map(
-            fn (array $tool): AssistantResponseToolCodeInterpreter|AssistantResponseToolRetrieval|AssistantResponseToolFunction => match ($tool['type']) {
+            fn (array $tool): AssistantResponseToolCodeInterpreter|AssistantResponseToolRetrieval|AssistantResponseToolFunction|AssistantResponseToolFileSearch => match ($tool['type']) {
                 'code_interpreter' => AssistantResponseToolCodeInterpreter::from($tool),
                 'retrieval' => AssistantResponseToolRetrieval::from($tool),
                 'function' => AssistantResponseToolFunction::from($tool),
+                'file_search'=> AssistantResponseToolFileSearch::from($tool)
             },
             $attributes['tools'],
         );
@@ -69,7 +69,6 @@ final class AssistantResponse implements ResponseContract, ResponseHasMetaInform
             $attributes['model'],
             $attributes['instructions'],
             $tools,
-            $attributes['file_ids'],
             $attributes['metadata'],
             $meta,
         );
@@ -88,7 +87,7 @@ final class AssistantResponse implements ResponseContract, ResponseHasMetaInform
             'description' => $this->description,
             'model' => $this->model,
             'instructions' => $this->instructions,
-            'tools' => array_map(fn (AssistantResponseToolCodeInterpreter|AssistantResponseToolRetrieval|AssistantResponseToolFunction $tool): array => $tool->toArray(), $this->tools),
+            'tools' => array_map(fn (AssistantResponseToolCodeInterpreter|AssistantResponseToolRetrieval|AssistantResponseToolFunction|AssistantResponseToolFileSearch $tool): array => $tool->toArray(), $this->tools),
             'file_ids' => $this->fileIds,
             'metadata' => $this->metadata,
         ];
